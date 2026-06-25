@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Song {
+  id            Int         @id @default(autoincrement())
+  title         String
+  genre         String
+  key           String?
+  timeSignature String?     @map("time_signature")
+  pdfPath       String?     @map("pdf_path")
+  worshipTypes  String[]    @default([]) @map("worship_types")
+  memo          String?
+  lastUsedAt    DateTime    @default(now()) @map("last_used_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  contiSongs    ContiSong[]
+
+  @@map("songs")
+}
+
+model Conti {
+  id          Int         @id @default(autoincrement())
+  date        String
+  worshipType String      @map("worship_type")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  songs       ContiSong[]
+
+  @@map("contis")
+}
+
+model ContiSong {
+  id         Int     @id @default(autoincrement())
+  contiId    Int     @map("conti_id")
+  songId     Int     @map("song_id")
+  orderIndex Int     @default(0) @map("order_index")
+  memo       String?
+  conti      Conti   @relation(fields: [contiId], references: [id], onDelete: Cascade)
+  song       Song    @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@map("conti_songs")
+}

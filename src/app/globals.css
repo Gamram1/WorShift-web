@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* WorShift 디자인 토큰 */
+  --color-ws-primary:       #C17F5A;
+  --color-ws-primary-light: #FDF6F0;
+  --color-ws-bg:            #FAF7F2;
+  --color-ws-card:          #FFFFFF;
+  --color-ws-text:          #3D2C24;
+  --color-ws-mid:           #8B6F5C;
+  --color-ws-light:         #B8A898;
+  --color-ws-border:        #E8DDD0;
+  --color-ws-border-light:  #F0EAE0;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* 예배 유형 색상 */
+  --color-sunday-bg:    #EEF7FF;
+  --color-sunday-text:  #3A7DC9;
+  --color-friday-bg:    #F0F7EE;
+  --color-friday-text:  #3A8A5C;
+  --color-dawn-bg:      #FFF8EC;
+  --color-dawn-text:    #C17F5A;
+  --color-special-bg:   #F7F0FF;
+  --color-special-text: #7A5AC9;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* 장르 배지 색상 */
+  --color-ccm-bg:       #EEF7FF;
+  --color-ccm-text:     #3A7DC9;
+  --color-hymn-bg:      #F0F7EE;
+  --color-hymn-text:    #3A8A5C;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #FAF7F2;
+  color: #3D2C24;
+}
+
+@media print {
+  nav { display: none !important; }
+  .no-print { display: none !important; }
+  body { background: white; padding: 0; }
+  main { padding: 32px !important; max-width: 100% !important; }
+  .bg-white { background: white !important; }
+  .border { border-color: #E8DDD0 !important; }
+  .rounded-2xl, .rounded-xl { border-radius: 0 !important; }
 }
