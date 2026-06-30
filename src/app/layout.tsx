@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full bg-ws-bg" style={{ fontFamily: 'var(--font-noto), sans-serif' }}>
         <nav className="sticky top-0 z-10 bg-ws-card border-b border-ws-border">
           <div className="max-w-2xl mx-auto px-5 flex items-center gap-6 h-14">
-            <span className="font-bold text-ws-text text-base mr-2">🎼 WorShift</span>
+            <a href="/" className="font-bold text-ws-text text-base mr-2 hover:opacity-75 transition-opacity">🎼 WorShift</a>
             <NavLink href="/songs">곡 DB</NavLink>
             <NavLink href="/contis">콘티</NavLink>
           </div>
