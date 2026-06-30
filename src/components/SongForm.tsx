@@ -146,7 +146,7 @@ export function SongForm({
       {/* 악보 파일 */}
       <div>
         <label className="block text-sm font-bold text-ws-text mb-2">
-          악보 <span className="text-ws-light font-normal">(선택 · 이미지 또는 PDF)</span>
+          악보 <span className="text-ws-light font-normal">(선택 · JPG, PNG, WEBP)</span>
         </label>
 
         {/* 현재 악보 미리보기 */}
@@ -179,7 +179,7 @@ export function SongForm({
           <input
             type="file"
             name="sheet"
-            accept="image/*,.pdf"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             className="sr-only"
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
           />

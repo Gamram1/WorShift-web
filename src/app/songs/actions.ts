@@ -14,6 +14,7 @@ function nullIfEmpty(val: FormDataEntryValue | null): string | null {
 }
 
 async function uploadSheet(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 업로드할 수 있어요.')
   const blob = await put(`sheets/${Date.now()}-${file.name}`, file, { access: 'public' })
   return blob.url
 }
