@@ -37,6 +37,9 @@ export default async function ContiDetailPage({
 
   const ws = WORSHIP_STYLE[conti.worshipType] ?? 'bg-ws-border-light text-ws-mid'
   const deleteAction = deleteConti.bind(null, conti.id)
+  const hasSongImages = conti.songs.some(
+    (cs) => cs.song.pdfPath && /\.(jpg|jpeg|png)(\?|$)/i.test(cs.song.pdfPath)
+  )
 
   return (
     <div>
@@ -50,6 +53,15 @@ export default async function ContiDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <PrintButton />
+          {hasSongImages && (
+            <a
+              href={`/api/contis/${conti.id}/pdf`}
+              download
+              className="px-4 py-2 rounded-xl border border-ws-border text-ws-mid text-sm font-bold hover:text-ws-primary hover:border-ws-primary transition-colors"
+            >
+              악보 PDF
+            </a>
+          )}
           <Link
             href={`/contis/${conti.id}/edit`}
             className="px-4 py-2 rounded-xl bg-ws-primary text-white text-sm font-bold hover:opacity-90 transition-opacity"
