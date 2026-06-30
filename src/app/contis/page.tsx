@@ -48,32 +48,24 @@ export default async function ContisPage() {
                 key={conti.id}
                 className="bg-white border border-ws-border rounded-2xl p-4 hover:border-ws-primary transition-colors"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <Link href={`/contis/${conti.id}`} className="flex-1 min-w-0 block">
-                    <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-lg mb-2 ${ws}`}>
-                      {conti.worshipType}
-                    </span>
-                    <p className="font-bold text-ws-text text-base">{formatDate(conti.date)}</p>
-                    <p className="text-ws-light text-xs mt-1 mb-2">{conti.songs.length}곡</p>
-                    {conti.songs.length > 0 && (
-                      <ol className="space-y-0.5">
-                        {conti.songs.map((cs, idx) => (
-                          <li key={cs.id} className="flex items-center gap-1.5 text-xs text-ws-mid">
-                            <span className="text-ws-light w-3 shrink-0">{idx + 1}.</span>
-                            <span>{cs.song.title}</span>
-                            {cs.song.key && <span className="text-ws-light">{cs.song.key}</span>}
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                  </Link>
-                  <Link
-                    href={`/contis/${conti.id}/edit`}
-                    className="shrink-0 text-ws-light hover:text-ws-primary text-xs px-2 py-1 rounded-lg hover:bg-ws-primary-light transition-colors"
-                  >
-                    수정
-                  </Link>
-                </div>
+                <Link href={`/contis/${conti.id}`} className="block">
+                  <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-lg mb-2 ${ws}`}>
+                    {conti.worshipType}
+                  </span>
+                  <p className="font-bold text-ws-text text-base">{formatDate(conti.date)}</p>
+                  <p className="text-ws-light text-xs mt-1 mb-2">{conti.songs.length}곡</p>
+                  {conti.songs.length > 0 && (
+                    <ol className="space-y-0.5">
+                      {conti.songs.map((cs, idx) => (
+                        <li key={cs.id} className="flex items-center gap-1.5 text-xs text-ws-mid">
+                          <span className="text-ws-light w-3 shrink-0">{idx + 1}.</span>
+                          <span>{cs.song.title}</span>
+                          {cs.song.key && <span className="text-ws-light">{cs.song.key}</span>}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </Link>
               </li>
             )
           })}

@@ -88,11 +88,6 @@ export default async function SongsPage({
                     )}
                   </div>
 
-                  {song.pdfPath && (
-                    <span className="shrink-0 text-ws-primary text-xs px-2 py-1 rounded-lg bg-ws-primary-light font-medium">
-                      악보 ▶
-                    </span>
-                  )}
                 </Link>
               </li>
             )
