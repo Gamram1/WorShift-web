@@ -18,14 +18,15 @@ const WORSHIP_STYLE: Record<string, string> = {
 export default async function SongsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; genre?: string }>
+  searchParams: Promise<{ q?: string; genre?: string; key?: string }>
 }) {
-  const { q = '', genre = '' } = await searchParams
+  const { q = '', genre = '', key = '' } = await searchParams
 
   const songs = await prisma.song.findMany({
     where: {
       ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
       ...(genre && genre !== '전체' ? { genre } : {}),
+      ...(key && key !== '전체' ? { key } : {}),
     },
     orderBy: { lastUsedAt: 'desc' },
   })

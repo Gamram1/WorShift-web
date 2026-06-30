@@ -11,7 +11,12 @@ const WORSHIP_STYLE: Record<string, string> = {
 
 export default async function ContisPage() {
   const contis = await prisma.conti.findMany({
-    include: { songs: { select: { id: true } } },
+    include: {
+      songs: {
+        include: { song: { select: { title: true, key: true } } },
+        orderBy: { orderIndex: 'asc' },
+      },
+    },
     orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
   })
 
@@ -49,7 +54,18 @@ export default async function ContisPage() {
                       {conti.worshipType}
                     </span>
                     <p className="font-bold text-ws-text text-base">{formatDate(conti.date)}</p>
-                    <p className="text-ws-light text-xs mt-1">{conti.songs.length}곡</p>
+                    <p className="text-ws-light text-xs mt-1 mb-2">{conti.songs.length}곡</p>
+                    {conti.songs.length > 0 && (
+                      <ol className="space-y-0.5">
+                        {conti.songs.map((cs, idx) => (
+                          <li key={cs.id} className="flex items-center gap-1.5 text-xs text-ws-mid">
+                            <span className="text-ws-light w-3 shrink-0">{idx + 1}.</span>
+                            <span>{cs.song.title}</span>
+                            {cs.song.key && <span className="text-ws-light">{cs.song.key}</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                   </Link>
                   <Link
                     href={`/contis/${conti.id}/edit`}

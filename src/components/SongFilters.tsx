@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition, useRef } from 'react'
 
 const GENRES = ['전체', 'CCM', '찬송가', '기타']
+const KEYS = ['전체', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 export function SongFilters() {
   const router = useRouter()
@@ -13,8 +14,9 @@ export function SongFilters() {
 
   const urlQ = searchParams.get('q') ?? ''
   const urlGenre = searchParams.get('genre') ?? '전체'
+  const urlKey = searchParams.get('key') ?? '전체'
 
-  const navigate = (updates: { q?: string; genre?: string }) => {
+  const navigate = (updates: { q?: string; genre?: string; key?: string }) => {
     const sp = new URLSearchParams(searchParams.toString())
     if ('q' in updates) {
       if (updates.q) sp.set('q', updates.q)
@@ -23,6 +25,10 @@ export function SongFilters() {
     if ('genre' in updates) {
       if (updates.genre && updates.genre !== '전체') sp.set('genre', updates.genre)
       else sp.delete('genre')
+    }
+    if ('key' in updates) {
+      if (updates.key && updates.key !== '전체') sp.set('key', updates.key)
+      else sp.delete('key')
     }
     startTransition(() => router.replace(`/songs?${sp.toString()}`))
   }
@@ -52,6 +58,7 @@ export function SongFilters() {
         </button>
       </form>
 
+      {/* 장르 필터 */}
       <div className="flex gap-2 flex-wrap">
         {GENRES.map((g) => (
           <button
@@ -65,6 +72,24 @@ export function SongFilters() {
             }`}
           >
             {g}
+          </button>
+        ))}
+      </div>
+
+      {/* 코드 필터 */}
+      <div className="flex gap-1.5 flex-wrap">
+        {KEYS.map((k) => (
+          <button
+            key={k}
+            onClick={() => navigate({ key: k })}
+            disabled={isPending}
+            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+              urlKey === k
+                ? 'bg-ws-text text-white'
+                : 'bg-white border border-ws-border text-ws-mid hover:text-ws-text'
+            }`}
+          >
+            {k}
           </button>
         ))}
       </div>
