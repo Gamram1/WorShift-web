@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 
 type ActionState = { error: string } | null
 
@@ -11,6 +11,7 @@ type SongData = {
   timeSignature: string | null
   worshipTypes: string[]
   memo: string | null
+  pdfPath: string | null
 }
 
 const GENRES = ['CCM', '찬송가', '기타']
@@ -22,6 +23,10 @@ const PILL =
   'block px-3 py-1.5 rounded-lg border border-ws-border text-sm text-ws-mid cursor-pointer select-none ' +
   'peer-checked:bg-ws-primary-light peer-checked:text-ws-primary peer-checked:border-ws-primary transition-all'
 
+function isImage(url: string) {
+  return /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url)
+}
+
 export function SongForm({
   action,
   song,
@@ -30,6 +35,7 @@ export function SongForm({
   song?: SongData
 }) {
   const [state, formAction, pending] = useActionState(action, null)
+  const [fileName, setFileName] = useState<string | null>(null)
 
   return (
     <form action={formAction} className="space-y-6">
@@ -37,6 +43,11 @@ export function SongForm({
         <p className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
           {state.error}
         </p>
+      )}
+
+      {/* 기존 악보 URL 전달 (수정 시 삭제/교체용) */}
+      {song?.pdfPath && (
+        <input type="hidden" name="existingSheetUrl" value={song.pdfPath} />
       )}
 
       {/* 제목 */}
@@ -130,6 +141,49 @@ export function SongForm({
             </label>
           ))}
         </div>
+      </div>
+
+      {/* 악보 파일 */}
+      <div>
+        <label className="block text-sm font-bold text-ws-text mb-2">
+          악보 <span className="text-ws-light font-normal">(선택 · 이미지 또는 PDF)</span>
+        </label>
+
+        {/* 현재 악보 미리보기 */}
+        {song?.pdfPath && !fileName && (
+          <div className="mb-2 p-3 bg-ws-bg border border-ws-border rounded-xl flex items-center gap-3">
+            {isImage(song.pdfPath) ? (
+              <img src={song.pdfPath} alt="현재 악보" className="h-16 w-16 object-cover rounded-lg shrink-0" />
+            ) : (
+              <div className="h-16 w-16 bg-ws-border-light rounded-lg flex items-center justify-center shrink-0 text-2xl">📄</div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-ws-mid truncate">현재 악보 등록됨</p>
+              <a
+                href={song.pdfPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-ws-primary hover:underline"
+              >
+                열어보기 →
+              </a>
+            </div>
+          </div>
+        )}
+
+        <label className="flex items-center gap-3 w-full bg-white border border-dashed border-ws-border rounded-xl px-4 py-3 cursor-pointer hover:border-ws-primary transition-colors">
+          <span className="text-xl">📎</span>
+          <span className="text-sm text-ws-mid flex-1 truncate">
+            {fileName ?? (song?.pdfPath ? '새 파일로 교체하려면 클릭' : '파일을 선택하세요')}
+          </span>
+          <input
+            type="file"
+            name="sheet"
+            accept="image/*,.pdf"
+            className="sr-only"
+            onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+          />
+        </label>
       </div>
 
       {/* 메모 */}

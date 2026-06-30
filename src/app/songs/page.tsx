@@ -84,12 +84,24 @@ export default async function SongsPage({
                   )}
                 </div>
 
-                <Link
-                  href={`/songs/${song.id}/edit`}
-                  className="shrink-0 text-ws-light hover:text-ws-primary text-xs px-2 py-1 rounded-lg hover:bg-ws-primary-light transition-colors"
-                >
-                  수정
-                </Link>
+                <div className="flex items-center gap-1 shrink-0">
+                  {song.pdfPath && (
+                    <a
+                      href={song.pdfPath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-ws-primary text-xs px-2 py-1 rounded-lg hover:bg-ws-primary-light transition-colors font-medium"
+                    >
+                      악보
+                    </a>
+                  )}
+                  <Link
+                    href={`/songs/${song.id}/edit`}
+                    className="text-ws-light hover:text-ws-primary text-xs px-2 py-1 rounded-lg hover:bg-ws-primary-light transition-colors"
+                  >
+                    수정
+                  </Link>
+                </div>
               </li>
             )
           })}
