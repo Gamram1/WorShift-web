@@ -204,12 +204,12 @@ export function ContiForm({
         </button>
       </form>
 
-      {/* 곡 선택 모달 (bottom sheet) */}
+      {/* 곡 선택 모달 (center) */}
       {pickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={closePicker}>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" onClick={closePicker}>
           <div
-            className="bg-white rounded-t-3xl w-full max-w-2xl mx-auto flex flex-col"
-            style={{ maxHeight: '50vh' }}
+            className="bg-white rounded-3xl w-full max-w-lg flex flex-col"
+            style={{ maxHeight: '55vh' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
