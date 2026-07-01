@@ -85,6 +85,30 @@ export async function deleteSheet_action(url: string): Promise<void> {
   await deleteSheet(url)
 }
 
+export async function updateSongSheet(
+  id: number,
+  formData: FormData
+): Promise<{ url: string } | { error: string }> {
+  const file = formData.get('sheet') as File | null
+  if (!file || file.size === 0) return { error: '파일을 선택해 주세요.' }
+
+  const song = await prisma.song.findUnique({ where: { id }, select: { pdfPath: true } })
+  if (!song) return { error: '곡을 찾을 수 없습니다.' }
+
+  let url: string
+  try {
+    url = await uploadSheet(file)
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : '업로드 실패했어요.' }
+  }
+
+  if (song.pdfPath) await deleteSheet(song.pdfPath)
+  await prisma.song.update({ where: { id }, data: { pdfPath: url } })
+  revalidatePath('/songs')
+  revalidatePath(`/songs/${id}`)
+  return { url }
+}
+
 export async function createSongQuick(
   formData: FormData
 ): Promise<{ id: number; title: string; genre: string; key: string | null } | { error: string }> {

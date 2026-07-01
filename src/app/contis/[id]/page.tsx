@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/format'
 import { DeleteContiButton } from '@/components/DeleteContiButton'
+import { ContiSongList } from '@/components/ContiSongList'
 import { deleteConti } from '../actions'
 
 const WORSHIP_STYLE: Record<string, string> = {
@@ -13,10 +14,6 @@ const WORSHIP_STYLE: Record<string, string> = {
   '특별예배': 'bg-special-bg text-special-text',
 }
 
-const GENRE_STYLE: Record<string, string> = {
-  CCM: 'bg-ccm-bg text-ccm-text',
-  '찬송가': 'bg-hymn-bg text-hymn-text',
-}
 
 export default async function ContiDetailPage({
   params,
@@ -68,40 +65,19 @@ export default async function ContiDetailPage({
       {/* 곡 목록 */}
       <div>
         <p className="text-xs font-bold text-ws-light tracking-widest uppercase mb-3">곡 순서</p>
-
-        {conti.songs.length === 0 ? (
-          <div className="bg-white border border-ws-border rounded-xl py-8 text-center text-ws-light text-sm">
-            등록된 곡이 없습니다
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {conti.songs.map((cs, idx) => {
-              const gs = GENRE_STYLE[cs.song.genre] ?? 'bg-ws-border-light text-ws-mid'
-              return (
-                <li key={cs.id} className="bg-white border border-ws-border rounded-xl overflow-hidden hover:border-ws-primary transition-colors">
-                  <Link href={`/songs/${cs.song.id}`} className="flex items-center gap-3 px-4 py-3.5">
-                    <div className="w-7 h-7 rounded-full bg-ws-border-light flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-ws-mid">{idx + 1}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-bold text-ws-text text-sm">{cs.song.title}</span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${gs}`}>{cs.song.genre}</span>
-                        {cs.song.key && <span className="text-xs text-ws-mid">{cs.song.key}</span>}
-                      </div>
-                    </div>
-                    <span className="text-ws-light text-xs shrink-0">→</span>
-                  </Link>
-                  {cs.memo && (
-                    <div className="border-t border-ws-border-light px-4 py-2.5 pl-14 bg-ws-bg">
-                      <p className="text-xs text-ws-mid">{cs.memo}</p>
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        <ContiSongList
+          initialSongs={conti.songs.map((cs) => ({
+            id: cs.id,
+            memo: cs.memo,
+            song: {
+              id: cs.song.id,
+              title: cs.song.title,
+              genre: cs.song.genre,
+              key: cs.song.key,
+              pdfPath: cs.song.pdfPath,
+            },
+          }))}
+        />
       </div>
 
       {/* 삭제 버튼 */}
