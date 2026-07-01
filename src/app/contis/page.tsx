@@ -4,6 +4,7 @@ import { formatDate } from '@/lib/format'
 
 const WORSHIP_STYLE: Record<string, string> = {
   '주일예배': 'bg-sunday-bg text-sunday-text',
+  '수요예배': 'bg-wednesday-bg text-wednesday-text',
   '금요예배': 'bg-friday-bg text-friday-text',
   '새벽예배': 'bg-dawn-bg text-dawn-text',
   '특별예배': 'bg-special-bg text-special-text',

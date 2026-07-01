@@ -19,11 +19,11 @@ type AvailableSong = {
   key: string | null
 }
 
-const WORSHIP_TYPES = ['주일예배', '새벽예배', '금요예배', '특별예배']
+const WORSHIP_TYPES = ['주일예배', '수요예배', '금요예배']
 const GENRES = ['전체', 'CCM', '찬송가', '기타']
 
 const PILL =
-  'block text-center py-2.5 rounded-xl border border-ws-border text-sm text-ws-mid cursor-pointer select-none ' +
+  'block text-center py-2 rounded-xl border border-ws-border text-sm text-ws-mid cursor-pointer select-none ' +
   'peer-checked:bg-ws-primary peer-checked:text-white peer-checked:border-ws-primary transition-all'
 
 export function ContiForm({
@@ -44,11 +44,7 @@ export function ContiForm({
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerQ, setPickerQ] = useState('')
   const [pickerGenre, setPickerGenre] = useState('전체')
-
-  const addSong = (song: AvailableSong) => {
-    if (songs.some((s) => s.songId === song.id)) return
-    setSongs((prev) => [...prev, { songId: song.id, title: song.title, genre: song.genre, key: song.key, memo: '' }])
-  }
+  const [pickerSelected, setPickerSelected] = useState<Set<number>>(new Set())
 
   const removeSong = (idx: number) => setSongs((prev) => prev.filter((_, i) => i !== idx))
 
@@ -65,7 +61,33 @@ export function ContiForm({
   const updateMemo = (idx: number, memo: string) =>
     setSongs((prev) => prev.map((s, i) => (i === idx ? { ...s, memo } : s)))
 
-  const closePicker = () => { setPickerOpen(false); setPickerQ(''); setPickerGenre('전체') }
+  const togglePickerSong = (song: AvailableSong) => {
+    if (songs.some((s) => s.songId === song.id)) return
+    setPickerSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(song.id)) next.delete(song.id)
+      else next.add(song.id)
+      return next
+    })
+  }
+
+  const confirmPicker = () => {
+    const toAdd = allSongs.filter(
+      (s) => pickerSelected.has(s.id) && !songs.some((cs) => cs.songId === s.id)
+    )
+    setSongs((prev) => [
+      ...prev,
+      ...toAdd.map((s) => ({ songId: s.id, title: s.title, genre: s.genre, key: s.key, memo: '' })),
+    ])
+    closePicker()
+  }
+
+  const closePicker = () => {
+    setPickerOpen(false)
+    setPickerQ('')
+    setPickerGenre('전체')
+    setPickerSelected(new Set())
+  }
 
   const filteredSongs = allSongs.filter((s) => {
     if (pickerQ && !s.title.includes(pickerQ)) return false
@@ -103,9 +125,9 @@ export function ContiForm({
         {/* 예배 유형 */}
         <div>
           <label className="block text-sm font-bold text-ws-text mb-2">예배 유형 *</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex gap-2">
             {WORSHIP_TYPES.map((wt) => (
-              <label key={wt}>
+              <label key={wt} className="flex-1">
                 <input
                   type="radio"
                   name="worshipType"
@@ -122,26 +144,15 @@ export function ContiForm({
 
         {/* 곡 순서 */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center mb-2">
             <span className="text-sm font-bold text-ws-text">
               곡 순서{' '}
               <span className="text-ws-light font-normal text-xs">({songs.length}곡)</span>
             </span>
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="text-sm font-bold text-ws-primary hover:opacity-75 transition-opacity"
-            >
-              + 곡 추가
-            </button>
           </div>
 
-          {songs.length === 0 ? (
-            <div className="bg-ws-bg border-2 border-dashed border-ws-border rounded-xl py-8 text-center text-ws-light text-sm">
-              + 곡 추가 버튼으로 곡을 추가하세요
-            </div>
-          ) : (
-            <ul className="space-y-2">
+          {songs.length > 0 && (
+            <ul className="space-y-2 mb-2">
               {songs.map((s, idx) => (
                 <li key={`${s.songId}-${idx}`} className="bg-white border border-ws-border rounded-xl overflow-hidden">
                   <div className="flex items-center gap-2 px-3 py-3">
@@ -173,6 +184,15 @@ export function ContiForm({
               ))}
             </ul>
           )}
+
+          {/* 곡 추가 클릭 영역 (항상 표시) */}
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="w-full py-5 border-2 border-dashed border-ws-border rounded-xl text-ws-light text-sm hover:border-ws-primary hover:text-ws-primary transition-colors"
+          >
+            + 곡 추가
+          </button>
         </div>
 
         <button
@@ -189,17 +209,17 @@ export function ContiForm({
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end" onClick={closePicker}>
           <div
             className="bg-white rounded-t-3xl w-full max-w-2xl mx-auto flex flex-col"
-            style={{ maxHeight: '80vh' }}
+            style={{ maxHeight: '50vh' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-ws-border shrink-0">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-ws-border shrink-0">
               <h2 className="font-bold text-ws-text">곡 선택</h2>
               <button onClick={closePicker} className="text-ws-mid hover:text-ws-text text-lg leading-none">✕</button>
             </div>
 
             {/* 검색 + 장르 필터 */}
-            <div className="px-5 py-3 space-y-2 border-b border-ws-border shrink-0">
+            <div className="px-5 py-2 space-y-2 border-b border-ws-border shrink-0">
               <input
                 type="text"
                 value={pickerQ}
@@ -220,21 +240,24 @@ export function ContiForm({
             </div>
 
             {/* 곡 목록 */}
-            <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2">
+            <div className="overflow-y-auto flex-1 px-5 py-2 space-y-1.5">
               {filteredSongs.length === 0 ? (
-                <p className="text-center text-ws-light text-sm py-8">검색 결과가 없어요.</p>
+                <p className="text-center text-ws-light text-sm py-6">검색 결과가 없어요.</p>
               ) : (
                 filteredSongs.map((song) => {
-                  const added = songs.some((s) => s.songId === song.id)
+                  const isInList = songs.some((s) => s.songId === song.id)
+                  const isSelected = pickerSelected.has(song.id)
                   return (
                     <button
                       key={song.id}
                       type="button"
-                      onClick={() => { if (!added) { addSong(song); } }}
-                      disabled={added}
-                      className={`w-full text-left flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
-                        added
-                          ? 'border-ws-border bg-ws-bg opacity-50 cursor-default'
+                      onClick={() => togglePickerSong(song)}
+                      disabled={isInList}
+                      className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl border transition-colors ${
+                        isInList
+                          ? 'border-ws-border bg-ws-bg opacity-40 cursor-default'
+                          : isSelected
+                          ? 'border-ws-primary bg-ws-primary-light'
                           : 'border-ws-border bg-white hover:border-ws-primary hover:bg-ws-primary-light'
                       }`}
                     >
@@ -242,11 +265,24 @@ export function ContiForm({
                         <span className="font-bold text-ws-text text-sm block">{song.title}</span>
                         <span className="text-xs text-ws-mid">{song.genre}{song.key ? ` · ${song.key}` : ''}</span>
                       </div>
-                      {added && <span className="text-ws-primary text-xs font-bold shrink-0">추가됨 ✓</span>}
+                      {isInList && <span className="text-ws-light text-xs shrink-0">추가됨</span>}
+                      {!isInList && isSelected && <span className="text-ws-primary font-bold text-sm shrink-0">✓</span>}
                     </button>
                   )
                 })
               )}
+            </div>
+
+            {/* 추가 확인 버튼 */}
+            <div className="px-5 py-3 border-t border-ws-border shrink-0">
+              <button
+                type="button"
+                onClick={confirmPicker}
+                disabled={pickerSelected.size === 0}
+                className="w-full py-3 rounded-xl bg-ws-primary text-white text-sm font-bold disabled:opacity-40 transition-opacity"
+              >
+                {pickerSelected.size > 0 ? `${pickerSelected.size}곡 추가하기` : '곡을 선택하세요'}
+              </button>
             </div>
           </div>
         </div>

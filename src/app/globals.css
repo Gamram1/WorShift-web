@@ -13,14 +13,16 @@
   --color-ws-border-light:  #F0EAE0;
 
   /* 예배 유형 색상 */
-  --color-sunday-bg:    #EEF7FF;
-  --color-sunday-text:  #3A7DC9;
-  --color-friday-bg:    #F0F7EE;
-  --color-friday-text:  #3A8A5C;
-  --color-dawn-bg:      #FFF8EC;
-  --color-dawn-text:    #C17F5A;
-  --color-special-bg:   #F7F0FF;
-  --color-special-text: #7A5AC9;
+  --color-sunday-bg:      #EEF7FF;
+  --color-sunday-text:    #3A7DC9;
+  --color-wednesday-bg:   #FFF8EC;
+  --color-wednesday-text: #C97A2A;
+  --color-friday-bg:      #F0F7EE;
+  --color-friday-text:    #3A8A5C;
+  --color-dawn-bg:        #FFF8EC;
+  --color-dawn-text:      #C17F5A;
+  --color-special-bg:     #F7F0FF;
+  --color-special-text:   #7A5AC9;
 
   /* 장르 배지 색상 */
   --color-ccm-bg:       #EEF7FF;
