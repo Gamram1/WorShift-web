@@ -78,8 +78,8 @@ export default async function ContiDetailPage({
             {conti.songs.map((cs, idx) => {
               const gs = GENRE_STYLE[cs.song.genre] ?? 'bg-ws-border-light text-ws-mid'
               return (
-                <li key={cs.id} className="bg-white border border-ws-border rounded-xl overflow-hidden">
-                  <div className="flex items-center gap-3 px-4 py-3.5">
+                <li key={cs.id} className="bg-white border border-ws-border rounded-xl overflow-hidden hover:border-ws-primary transition-colors">
+                  <Link href={`/songs/${cs.song.id}`} className="flex items-center gap-3 px-4 py-3.5">
                     <div className="w-7 h-7 rounded-full bg-ws-border-light flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-ws-mid">{idx + 1}</span>
                     </div>
@@ -90,7 +90,8 @@ export default async function ContiDetailPage({
                         {cs.song.key && <span className="text-xs text-ws-mid">{cs.song.key}</span>}
                       </div>
                     </div>
-                  </div>
+                    <span className="text-ws-light text-xs shrink-0">→</span>
+                  </Link>
                   {cs.memo && (
                     <div className="border-t border-ws-border-light px-4 py-2.5 pl-14 bg-ws-bg">
                       <p className="text-xs text-ws-mid">{cs.memo}</p>
