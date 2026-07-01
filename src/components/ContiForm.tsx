@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { createSongQuick } from '@/app/songs/actions'
 
 type ActionState = { error: string } | null
 
@@ -21,6 +22,8 @@ type AvailableSong = {
 
 const WORSHIP_TYPES = ['주일예배', '수요예배', '금요예배']
 const GENRES = ['전체', 'CCM', '찬송가', '기타']
+const SONG_GENRES = ['CCM', '찬송가', '기타']
+const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B']
 
 const PILL =
   'block text-center py-2 rounded-xl border border-ws-border text-sm text-ws-mid cursor-pointer select-none ' +
@@ -41,10 +44,20 @@ export function ContiForm({
 }) {
   const [state, formAction, pending] = useActionState(action, null)
   const [songs, setSongs] = useState<SongItem[]>(initialSongs)
+
+  // 팝업 공통
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerView, setPickerView] = useState<'list' | 'new'>('list')
+
+  // 목록 뷰
+  const [allSongsState, setAllSongsState] = useState<AvailableSong[]>(allSongs)
   const [pickerQ, setPickerQ] = useState('')
   const [pickerGenre, setPickerGenre] = useState('전체')
   const [pickerSelected, setPickerSelected] = useState<Set<number>>(new Set())
+
+  // 새 곡 뷰
+  const [newSongPending, setNewSongPending] = useState(false)
+  const [newSongError, setNewSongError] = useState<string | null>(null)
 
   const removeSong = (idx: number) => setSongs((prev) => prev.filter((_, i) => i !== idx))
 
@@ -72,7 +85,7 @@ export function ContiForm({
   }
 
   const confirmPicker = () => {
-    const toAdd = allSongs.filter(
+    const toAdd = allSongsState.filter(
       (s) => pickerSelected.has(s.id) && !songs.some((cs) => cs.songId === s.id)
     )
     setSongs((prev) => [
@@ -87,9 +100,30 @@ export function ContiForm({
     setPickerQ('')
     setPickerGenre('전체')
     setPickerSelected(new Set())
+    setPickerView('list')
+    setNewSongError(null)
   }
 
-  const filteredSongs = allSongs.filter((s) => {
+  const handleCreateSong = async (formData: FormData) => {
+    setNewSongPending(true)
+    setNewSongError(null)
+    try {
+      const result = await createSongQuick(formData)
+      if ('error' in result) {
+        setNewSongError(result.error)
+      } else {
+        setAllSongsState((prev) => [...prev, result])
+        setPickerSelected((prev) => new Set([...prev, result.id]))
+        setPickerView('list')
+      }
+    } catch {
+      setNewSongError('오류가 발생했어요. 다시 시도해 주세요.')
+    } finally {
+      setNewSongPending(false)
+    }
+  }
+
+  const filteredSongs = allSongsState.filter((s) => {
     if (pickerQ && !s.title.includes(pickerQ)) return false
     if (pickerGenre !== '전체' && s.genre !== pickerGenre) return false
     return true
@@ -185,7 +219,7 @@ export function ContiForm({
             </ul>
           )}
 
-          {/* 곡 추가 클릭 영역 (항상 표시) */}
+          {/* 곡 추가 클릭 영역 */}
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
@@ -204,7 +238,7 @@ export function ContiForm({
         </button>
       </form>
 
-      {/* 곡 선택 모달 (center) */}
+      {/* 곡 선택 / 새 곡 추가 모달 */}
       {pickerOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" onClick={closePicker}>
           <div
@@ -212,78 +246,174 @@ export function ContiForm({
             style={{ maxHeight: '55vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 모달 헤더 */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-ws-border shrink-0">
-              <h2 className="font-bold text-ws-text">곡 선택</h2>
-              <button onClick={closePicker} className="text-ws-mid hover:text-ws-text text-lg leading-none">✕</button>
-            </div>
-
-            {/* 검색 + 장르 필터 */}
-            <div className="px-5 py-2 space-y-2 border-b border-ws-border shrink-0">
-              <input
-                type="text"
-                value={pickerQ}
-                onChange={(e) => setPickerQ(e.target.value)}
-                placeholder="곡 제목 검색..."
-                className="w-full bg-ws-bg border border-ws-border rounded-xl px-4 py-2 text-sm text-ws-text placeholder:text-ws-light outline-none focus:border-ws-primary transition-colors"
-              />
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {GENRES.map((g) => (
-                  <button key={g} type="button" onClick={() => setPickerGenre(g)}
-                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      pickerGenre === g ? 'bg-ws-primary text-white' : 'bg-ws-bg border border-ws-border text-ws-mid hover:text-ws-text'
-                    }`}>
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 곡 목록 */}
-            <div className="overflow-y-auto flex-1 px-5 py-2 space-y-1.5">
-              {filteredSongs.length === 0 ? (
-                <p className="text-center text-ws-light text-sm py-6">검색 결과가 없어요.</p>
-              ) : (
-                filteredSongs.map((song) => {
-                  const isInList = songs.some((s) => s.songId === song.id)
-                  const isSelected = pickerSelected.has(song.id)
-                  return (
+            {pickerView === 'list' ? (
+              <>
+                {/* 목록 뷰 헤더 */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-ws-border shrink-0">
+                  <h2 className="font-bold text-ws-text">곡 선택</h2>
+                  <div className="flex items-center gap-3">
                     <button
-                      key={song.id}
                       type="button"
-                      onClick={() => togglePickerSong(song)}
-                      disabled={isInList}
-                      className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl border transition-colors ${
-                        isInList
-                          ? 'border-ws-border bg-ws-bg opacity-40 cursor-default'
-                          : isSelected
-                          ? 'border-ws-primary bg-ws-primary-light'
-                          : 'border-ws-border bg-white hover:border-ws-primary hover:bg-ws-primary-light'
-                      }`}
+                      onClick={() => { setPickerView('new'); setNewSongError(null) }}
+                      className="text-ws-primary text-sm font-bold hover:opacity-75 transition-opacity"
                     >
-                      <div>
-                        <span className="font-bold text-ws-text text-sm block">{song.title}</span>
-                        <span className="text-xs text-ws-mid">{song.genre}{song.key ? ` · ${song.key}` : ''}</span>
-                      </div>
-                      {isInList && <span className="text-ws-light text-xs shrink-0">추가됨</span>}
-                      {!isInList && isSelected && <span className="text-ws-primary font-bold text-sm shrink-0">✓</span>}
+                      + 새 곡
                     </button>
-                  )
-                })
-              )}
-            </div>
+                    <button onClick={closePicker} className="text-ws-mid hover:text-ws-text text-lg leading-none">✕</button>
+                  </div>
+                </div>
 
-            {/* 추가 확인 버튼 */}
-            <div className="px-5 py-3 border-t border-ws-border shrink-0">
-              <button
-                type="button"
-                onClick={confirmPicker}
-                disabled={pickerSelected.size === 0}
-                className="w-full py-3 rounded-xl bg-ws-primary text-white text-sm font-bold disabled:opacity-40 transition-opacity"
-              >
-                {pickerSelected.size > 0 ? `${pickerSelected.size}곡 추가하기` : '곡을 선택하세요'}
-              </button>
-            </div>
+                {/* 검색 + 장르 필터 */}
+                <div className="px-5 py-2 space-y-2 border-b border-ws-border shrink-0">
+                  <input
+                    type="text"
+                    value={pickerQ}
+                    onChange={(e) => setPickerQ(e.target.value)}
+                    placeholder="곡 제목 검색..."
+                    className="w-full bg-ws-bg border border-ws-border rounded-xl px-4 py-2 text-sm text-ws-text placeholder:text-ws-light outline-none focus:border-ws-primary transition-colors"
+                  />
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {GENRES.map((g) => (
+                      <button key={g} type="button" onClick={() => setPickerGenre(g)}
+                        className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          pickerGenre === g ? 'bg-ws-primary text-white' : 'bg-ws-bg border border-ws-border text-ws-mid hover:text-ws-text'
+                        }`}>
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 곡 목록 */}
+                <div className="overflow-y-auto flex-1 px-5 py-2 space-y-1.5">
+                  {filteredSongs.length === 0 ? (
+                    <p className="text-center text-ws-light text-sm py-6">검색 결과가 없어요.</p>
+                  ) : (
+                    filteredSongs.map((song) => {
+                      const isInList = songs.some((s) => s.songId === song.id)
+                      const isSelected = pickerSelected.has(song.id)
+                      return (
+                        <button
+                          key={song.id}
+                          type="button"
+                          onClick={() => togglePickerSong(song)}
+                          disabled={isInList}
+                          className={`w-full text-left flex items-center justify-between px-4 py-2.5 rounded-xl border transition-colors ${
+                            isInList
+                              ? 'border-ws-border bg-ws-bg opacity-40 cursor-default'
+                              : isSelected
+                              ? 'border-ws-primary bg-ws-primary-light'
+                              : 'border-ws-border bg-white hover:border-ws-primary hover:bg-ws-primary-light'
+                          }`}
+                        >
+                          <div>
+                            <span className="font-bold text-ws-text text-sm block">{song.title}</span>
+                            <span className="text-xs text-ws-mid">{song.genre}{song.key ? ` · ${song.key}` : ''}</span>
+                          </div>
+                          {isInList && <span className="text-ws-light text-xs shrink-0">추가됨</span>}
+                          {!isInList && isSelected && <span className="text-ws-primary font-bold text-sm shrink-0">✓</span>}
+                        </button>
+                      )
+                    })
+                  )}
+                </div>
+
+                {/* 추가 확인 버튼 */}
+                <div className="px-5 py-3 border-t border-ws-border shrink-0">
+                  <button
+                    type="button"
+                    onClick={confirmPicker}
+                    disabled={pickerSelected.size === 0}
+                    className="w-full py-3 rounded-xl bg-ws-primary text-white text-sm font-bold disabled:opacity-40 transition-opacity"
+                  >
+                    {pickerSelected.size > 0 ? `${pickerSelected.size}곡 추가하기` : '곡을 선택하세요'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 새 곡 뷰 헤더 */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-ws-border shrink-0">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setPickerView('list'); setNewSongError(null) }}
+                      className="text-ws-mid hover:text-ws-text text-sm transition-colors"
+                    >
+                      ← 뒤로
+                    </button>
+                    <h2 className="font-bold text-ws-text">새 곡 추가</h2>
+                  </div>
+                  <button onClick={closePicker} className="text-ws-mid hover:text-ws-text text-lg leading-none">✕</button>
+                </div>
+
+                {/* 새 곡 폼 */}
+                <form action={handleCreateSong} className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+                  {newSongError && (
+                    <p className="bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-xl">
+                      {newSongError}
+                    </p>
+                  )}
+
+                  {/* 제목 */}
+                  <div>
+                    <label className="block text-xs font-bold text-ws-text mb-1.5">제목 *</label>
+                    <input
+                      name="title"
+                      required
+                      placeholder="곡 제목을 입력하세요"
+                      className="w-full bg-ws-bg border border-ws-border rounded-xl px-4 py-2.5 text-sm text-ws-text placeholder:text-ws-light outline-none focus:border-ws-primary transition-colors"
+                    />
+                  </div>
+
+                  {/* 장르 */}
+                  <div>
+                    <label className="block text-xs font-bold text-ws-text mb-1.5">장르 *</label>
+                    <div className="flex gap-2">
+                      {SONG_GENRES.map((g, i) => (
+                        <label key={g} className="flex-1">
+                          <input
+                            type="radio"
+                            name="genre"
+                            value={g}
+                            defaultChecked={i === 0}
+                            required
+                            className="sr-only peer"
+                          />
+                          <span className="block text-center py-2 rounded-xl border border-ws-border text-xs text-ws-mid cursor-pointer select-none peer-checked:bg-ws-primary peer-checked:text-white peer-checked:border-ws-primary transition-all">
+                            {g}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 키 */}
+                  <div>
+                    <label className="block text-xs font-bold text-ws-text mb-1.5">
+                      키 <span className="text-ws-light font-normal">(선택)</span>
+                    </label>
+                    <select
+                      name="key"
+                      className="w-full bg-ws-bg border border-ws-border rounded-xl px-4 py-2.5 text-sm text-ws-text outline-none focus:border-ws-primary transition-colors"
+                    >
+                      <option value="">없음</option>
+                      {KEYS.map((k) => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={newSongPending}
+                    className="w-full py-3 rounded-xl bg-ws-primary text-white text-sm font-bold disabled:opacity-60 hover:opacity-90 transition-opacity"
+                  >
+                    {newSongPending ? '추가 중...' : '곡 추가 후 선택'}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

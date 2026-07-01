@@ -85,6 +85,30 @@ export async function deleteSheet_action(url: string): Promise<void> {
   await deleteSheet(url)
 }
 
+export async function createSongQuick(
+  formData: FormData
+): Promise<{ id: number; title: string; genre: string; key: string | null } | { error: string }> {
+  const title = (formData.get('title') as string)?.trim()
+  const genre = formData.get('genre') as string
+  if (!title || !genre) return { error: '제목과 장르는 필수입니다.' }
+
+  const song = await prisma.song.create({
+    data: {
+      title,
+      genre,
+      key: nullIfEmpty(formData.get('key')),
+      timeSignature: null,
+      memo: null,
+      worshipTypes: [],
+      pdfPath: null,
+    },
+    select: { id: true, title: true, genre: true, key: true },
+  })
+
+  revalidatePath('/songs')
+  return song
+}
+
 export async function deleteSong(id: number): Promise<void> {
   const song = await prisma.song.findUnique({ where: { id }, select: { pdfPath: true } })
   if (song?.pdfPath) await deleteSheet(song.pdfPath)
